@@ -60,7 +60,7 @@ jobs:
       - uses: jvsiqueira1/gh-stats@v1
         with:
           token: ${{ secrets.GH_TOKEN }}
-          lang: "en"
+          lang: "en"           # pt, en or es
 ```
 
 ### 4. Add the chart to your README
