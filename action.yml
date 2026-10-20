@@ -1,0 +1,63 @@
+name: "Languages Chart"
+description: "Gera um gráfico SVG com as linguagens dos seus repositórios, incluindo os privados"
+author: "jvsiqueira1"
+
+branding:
+  icon: "bar-chart-2"
+  color: "blue"
+
+inputs:
+  token:
+    description: "Token com acesso de leitura (Metadata) aos seus repositórios"
+    required: true
+  username:
+    description: "Usuário do GitHub"
+    default: ${{ github.repository_owner }}
+  output:
+    description: "Caminho do SVG gerado"
+    default: "languages.svg"
+  title:
+    description: "Título do gráfico"
+    default: "Linguagens mais usadas"
+  max_bars:
+    description: "Quantidade de linguagens antes de agrupar o resto em 'Outras'"
+    default: "8"
+  include_private:
+    description: "Incluir repositórios privados"
+    default: "true"
+  include_forks:
+    description: "Incluir forks"
+    default: "false"
+  commit:
+    description: "Fazer commit do SVG automaticamente"
+    default: "true"
+  commit_message:
+    description: "Mensagem do commit"
+    default: "chore: atualiza gráfico de linguagens"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Gerar gráfico
+      shell: bash
+      run: node "${{ github.action_path }}/src/index.mjs"
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        GH_USERNAME: ${{ inputs.username }}
+        OUTPUT: ${{ inputs.output }}
+        TITLE: ${{ inputs.title }}
+        MAX_BARS: ${{ inputs.max_bars }}
+        INCLUDE_PRIVATE: ${{ inputs.include_private }}
+        INCLUDE_FORKS: ${{ inputs.include_forks }}
+
+    - name: Commit do SVG
+      if: inputs.commit == 'true'
+      shell: bash
+      env:
+        OUTPUT: ${{ inputs.output }}
+        COMMIT_MESSAGE: ${{ inputs.commit_message }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add "$OUTPUT"
+        git diff --staged --quiet || (git commit -m "$COMMIT_MESSAGE" && git push)

@@ -1,0 +1,4 @@
+.env
+*.json
+languages.svg
+node_modules/
