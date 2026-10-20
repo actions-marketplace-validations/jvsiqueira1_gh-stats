@@ -1,5 +1,7 @@
 # Languages Chart
 
+<sub>**Português** · [English](README.en.md) · [Español](README.es.md)</sub>
+
 GitHub Action que gera um gráfico SVG com as linguagens mais usadas nos seus repositórios, **incluindo os privados**, e mantém o gráfico do seu README sempre atualizado.
 
 <p>
@@ -139,3 +141,7 @@ node --env-file=.env src/index.mjs
 ```
 
 As opções também podem ser passadas por variável de ambiente: `OUTPUT`, `TITLE`, `MAX_BARS`, `INCLUDE_PRIVATE` e `INCLUDE_FORKS`.
+
+## Licença
+
+[MIT](LICENSE)
