@@ -2,6 +2,8 @@
 
 <sub>**Português** · [English](README.en.md) · [Español](README.es.md)</sub>
 
+[![CI](https://github.com/jvsiqueira1/gh-stats/actions/workflows/ci.yml/badge.svg)](https://github.com/jvsiqueira1/gh-stats/actions/workflows/ci.yml)
+
 GitHub Action que gera um gráfico SVG com as linguagens mais usadas nos seus repositórios, **incluindo os privados**, e mantém o gráfico do seu README sempre atualizado.
 
 <p>
@@ -13,7 +15,9 @@ GitHub Action que gera um gráfico SVG com as linguagens mais usadas nos seus re
 ## Por que usar
 
 - **Inclui repositórios privados.** Serviços que geram a imagem por URL só enxergam os repositórios públicos. Aqui, a Action roda no seu próprio repositório com o seu token, e ele nunca sai da sua conta.
-- **Tema claro e escuro.** As cores acompanham o tema do sistema de quem está vendo.
+- **Tema claro e escuro**, acompanhando o sistema de quem vê ou o tema do próprio GitHub.
+- **Em português, inglês ou espanhol**, inclusive no formato dos números.
+- **Resistente a falhas.** Tenta de novo quando a API do GitHub oscila, e um repositório com erro é pulado sem derrubar o resto.
 - **Sem dependências.** Só Node.js, que já vem instalado nos runners do GitHub.
 - **Sem commits vazios.** O commit só acontece quando o gráfico muda.
 
@@ -71,22 +75,61 @@ jobs:
 
 Para gerar o primeiro gráfico sem esperar o agendamento, vá em **Actions → Atualizar linguagens → Run workflow**.
 
+## Tema claro e escuro
+
+Por padrão (`themes: "auto"`), o gráfico acompanha o tema do **sistema operacional** de quem vê. Só que o GitHub tem a própria configuração de tema: uma pessoa com o GitHub escuro e o sistema claro veria o gráfico claro num fundo escuro.
+
+Para acompanhar o tema **do GitHub**, gere as duas versões:
+
+```yaml
+- uses: jvsiqueira1/gh-stats@v1
+  with:
+    token: ${{ secrets.GH_TOKEN }}
+    themes: "light, dark"
+```
+
+Isso cria `languages-light.svg` e `languages-dark.svg`. No README, use `<picture>`, que o GitHub troca de acordo com o tema do site:
+
+```html
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="languages-dark.svg">
+  <img src="languages-light.svg" alt="Linguagens mais usadas">
+</picture>
+```
+
 ## Opções
 
 | Input | Padrão | Descrição |
 |---|---|---|
 | `token` | — | **Obrigatório.** Token com acesso de leitura (Metadata) aos seus repositórios |
 | `username` | dono do repositório | Usuário do GitHub cujos repositórios serão analisados |
-| `output` | `languages.svg` | Caminho do SVG gerado |
-| `lang` | `pt` | Idioma dos textos do gráfico: `pt`, `en` ou `es` |
+| `output` | `languages.svg` | Caminho do SVG gerado. Pastas que não existem são criadas |
+| `lang` | `pt` | Idioma dos textos e dos números: `pt`, `en` ou `es` |
 | `title` | título do `lang` escolhido | Título do gráfico |
+| `themes` | `auto` | Temas a gerar, separados por vírgula: `auto`, `light`, `dark`. `light` e `dark` geram arquivos com sufixo (`languages-light.svg`) |
 | `max_bars` | `8` | Quantidade de linguagens exibidas antes de agrupar o resto em "Outras" |
+| `exclude_languages` | — | Linguagens a ignorar, separadas por vírgula (ex.: `HTML, CSS`) |
+| `exclude_repos` | — | Repositórios a ignorar, separados por vírgula (ex.: `meu-site, dotfiles`) |
 | `include_private` | `true` | Incluir repositórios privados |
 | `include_forks` | `false` | Incluir forks |
-| `commit` | `true` | Fazer commit do SVG automaticamente |
+| `commit` | `true` | Fazer commit dos SVGs automaticamente |
 | `commit_message` | `chore: atualiza gráfico de linguagens` | Mensagem do commit |
 
+| Output | Descrição |
+|---|---|
+| `files` | Arquivos gerados, um por linha |
+
 ### Exemplos
+
+Ignorar linguagens de marcação e um repositório com código gerado:
+
+```yaml
+- uses: jvsiqueira1/gh-stats@v1
+  with:
+    token: ${{ secrets.GH_TOKEN }}
+    exclude_languages: "HTML, CSS, Jupyter Notebook"
+    exclude_repos: "projeto-com-build-commitado"
+```
 
 Somente repositórios públicos, em inglês, com título próprio e o SVG numa pasta:
 
@@ -104,24 +147,36 @@ Gerar o SVG sem fazer commit, para usar em outro passo do seu workflow:
 
 ```yaml
 - uses: jvsiqueira1/gh-stats@v1
+  id: chart
   with:
     token: ${{ secrets.GH_TOKEN }}
     commit: "false"
+
+- run: echo "${{ steps.chart.outputs.files }}"
 ```
 
 ## Como funciona
 
 1. Lista todos os repositórios que o token enxerga (`GET /user/repos`), com paginação.
-2. Mantém só os que pertencem ao `username` e, por padrão, ignora forks.
-3. Busca as linguagens de cada repositório (`GET /repos/{owner}/{repo}/languages`), 10 de cada vez.
-4. Soma os bytes por linguagem e gera o SVG.
-5. Faz commit do SVG se ele mudou.
+2. Mantém só os que pertencem ao `username`, sem os forks e os repositórios excluídos.
+3. Busca as linguagens de cada repositório (`GET /repos/{owner}/{repo}/languages`), 10 de cada vez. Erros temporários são repetidos até 3 vezes, e um repositório que continuar falhando é pulado, com um aviso no log.
+4. Soma os bytes por linguagem, sem as linguagens excluídas, e gera os SVGs.
+5. Faz commit dos SVGs se eles mudaram.
 
 Os valores são **bytes de código**, calculados pelo próprio GitHub (o mesmo cálculo da barra de linguagens de cada repositório). Um único repositório grande pode pesar mais que vários pequenos. Passe o mouse sobre uma barra, abrindo o SVG direto no navegador, para ver em quantos repositórios a linguagem aparece.
 
 ### Privacidade
 
 Os **nomes** dos repositórios privados não aparecem no gráfico. Os bytes de código deles, sim, entram na soma. Se o repositório onde o SVG fica for público, esses totais ficam visíveis para qualquer pessoa. Use `include_private: "false"` se preferir não expor isso.
+
+### Erros comuns
+
+| Mensagem | O que fazer |
+|---|---|
+| Token inválido ou expirado (401) | Gere um novo token e atualize o secret `GH_TOKEN` |
+| Sem permissão para acessar … (403) | Confira se o token tem **Metadata: Read-only** e acesso a **All repositories** |
+| Limite de requisições da API do GitHub atingido | Espere o horário indicado na mensagem, ou rode o workflow com menos frequência |
+| Repositório … ignorado | Aviso, não erro: o gráfico foi gerado sem aquele repositório |
 
 ### Limitações
 
@@ -143,7 +198,17 @@ E rode:
 node --env-file=.env src/index.mjs
 ```
 
-As opções também podem ser passadas por variável de ambiente: `OUTPUT`, `CHART_LANG`, `TITLE`, `MAX_BARS`, `INCLUDE_PRIVATE` e `INCLUDE_FORKS`.
+As opções também podem ser passadas por variável de ambiente: `OUTPUT`, `CHART_LANG`, `TITLE`, `THEMES`, `MAX_BARS`, `EXCLUDE_LANGUAGES`, `EXCLUDE_REPOS`, `INCLUDE_PRIVATE` e `INCLUDE_FORKS`.
+
+## Desenvolvimento
+
+Os testes usam o test runner nativo do Node, sem dependências e sem precisar de token:
+
+```
+npm test
+```
+
+A [CI](.github/workflows/ci.yml) roda os testes no Node 20 e 24 a cada push e pull request. Se o secret `GH_TOKEN` estiver configurado no repositório, ela também executa a própria Action nos três temas e salva os gráficos gerados como artefato.
 
 ## Licença
 

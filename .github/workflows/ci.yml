@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Testes (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 24]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+
+  action:
+    name: Executa a Action
+    runs-on: ubuntu-latest
+    needs: test
+    env:
+      # Secrets não podem ser usados direto no "if", então viram uma variável
+      HAS_TOKEN: ${{ secrets.GH_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Aviso de secret ausente
+        if: env.HAS_TOKEN != 'true'
+        run: echo "::notice::Secret GH_TOKEN não configurado neste repositório. A execução da Action foi pulada."
+
+      - name: Gera os gráficos
+        if: env.HAS_TOKEN == 'true'
+        id: chart
+        uses: ./
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          output: out/languages.svg
+          themes: auto, light, dark
+          commit: "false"
+
+      - name: Confere os arquivos gerados
+        if: env.HAS_TOKEN == 'true'
+        env:
+          FILES: ${{ steps.chart.outputs.files }}
+        run: |
+          while IFS= read -r file; do
+            test -s "$file" || { echo "::error::Arquivo vazio ou ausente: $file"; exit 1; }
+            grep -q "<svg" "$file" || { echo "::error::Não é um SVG: $file"; exit 1; }
+            echo "OK: $file"
+          done <<< "$FILES"
+
+      - name: Salva os gráficos para conferência
+        if: env.HAS_TOKEN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: graficos
+          path: out/

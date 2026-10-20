@@ -22,9 +22,18 @@ inputs:
   title:
     description: "Título do gráfico (padrão: o título do idioma escolhido)"
     default: ""
+  themes:
+    description: "Temas a gerar, separados por vírgula: auto, light, dark. light e dark geram arquivos com sufixo (languages-light.svg)"
+    default: "auto"
   max_bars:
     description: "Quantidade de linguagens antes de agrupar o resto"
     default: "8"
+  exclude_languages:
+    description: "Linguagens a ignorar, separadas por vírgula (ex.: HTML, CSS)"
+    default: ""
+  exclude_repos:
+    description: "Repositórios a ignorar, separados por vírgula (ex.: meu-repo, outro-repo)"
+    default: ""
   include_private:
     description: "Incluir repositórios privados"
     default: "true"
@@ -38,10 +47,16 @@ inputs:
     description: "Mensagem do commit"
     default: "chore: atualiza gráfico de linguagens"
 
+outputs:
+  files:
+    description: "Arquivos gerados, um por linha"
+    value: ${{ steps.generate.outputs.files }}
+
 runs:
   using: "composite"
   steps:
     - name: Gerar gráfico
+      id: generate
       shell: bash
       run: node "${{ github.action_path }}/src/index.mjs"
       env:
@@ -50,7 +65,10 @@ runs:
         OUTPUT: ${{ inputs.output }}
         CHART_LANG: ${{ inputs.lang }}
         TITLE: ${{ inputs.title }}
+        THEMES: ${{ inputs.themes }}
         MAX_BARS: ${{ inputs.max_bars }}
+        EXCLUDE_LANGUAGES: ${{ inputs.exclude_languages }}
+        EXCLUDE_REPOS: ${{ inputs.exclude_repos }}
         INCLUDE_PRIVATE: ${{ inputs.include_private }}
         INCLUDE_FORKS: ${{ inputs.include_forks }}
 
@@ -58,10 +76,12 @@ runs:
       if: inputs.commit == 'true'
       shell: bash
       env:
-        OUTPUT: ${{ inputs.output }}
+        FILES: ${{ steps.generate.outputs.files }}
         COMMIT_MESSAGE: ${{ inputs.commit_message }}
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git add "$OUTPUT"
+        while IFS= read -r file; do
+          [ -n "$file" ] && git add -- "$file"
+        done <<< "$FILES"
         git diff --staged --quiet || (git commit -m "$COMMIT_MESSAGE" && git push)

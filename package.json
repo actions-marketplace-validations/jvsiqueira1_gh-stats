@@ -1,0 +1,12 @@
+{
+  "name": "gh-stats",
+  "private": true,
+  "description": "GitHub Action que gera um gráfico SVG com as linguagens dos seus repositórios",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
