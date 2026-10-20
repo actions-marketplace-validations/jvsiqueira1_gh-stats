@@ -17,17 +17,17 @@ function barPath(x, y, w, h, r) {
     return `M${x},${y} H${x + w - r} A${r},${r} 0 0 1 ${x + w},${y + r} V${y + h - r} A${r},${r} 0 0 1 ${x + w - r},${y + h} H${x} Z`
 }
 
-export function renderChart(data, { title, maxBars }) {
+export function renderChart(data, { title, maxBars, t }) {
     const rows = data.languages.slice(0, maxBars).map(lang => ({
         name: lang.name,
         bytes: lang.bytes,
-        tooltip: `${lang.repos} ${lang.repos === 1 ? "repo" : "repos"}`
+        tooltip: t.repos(lang.repos)
     }))
 
     const rest = data.languages.slice(maxBars)
     if (rest.length > 0) {
         rows.push({
-            name: "Outras",
+            name: t.others,
             bytes: rest.reduce((sum, lang) => sum + lang.bytes, 0),
             tooltip: rest.map(lang => lang.name).join(", ")
         })
@@ -70,7 +70,7 @@ export function renderChart(data, { title, maxBars }) {
   </style>
   <rect width="100%" height="100%" rx="8" fill="var(--surface)"/>
   <text x="${padding}" y="32" class="title">${escapeXml(title)}</text>
-  <text x="${padding}" y="54" class="subtitle">${data.totalRepos} repositórios · ${formatBytes(data.totalBytes)} de código</text>
+  <text x="${padding}" y="54" class="subtitle">${t.repos(data.totalRepos)} · ${t.code(formatBytes(data.totalBytes))}</text>
 ${bars}
 </svg>
 `

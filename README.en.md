@@ -60,7 +60,7 @@ jobs:
       - uses: jvsiqueira1/gh-stats@v1
         with:
           token: ${{ secrets.GH_TOKEN }}
-          title: "Most used languages"
+          lang: "en"
 ```
 
 ### 4. Add the chart to your README
@@ -78,8 +78,9 @@ To generate the first chart without waiting for the schedule, go to **Actions â†
 | `token` | â€” | **Required.** Token with read access (Metadata) to your repositories |
 | `username` | repository owner | GitHub user whose repositories will be analyzed |
 | `output` | `languages.svg` | Path of the generated SVG |
-| `title` | `Linguagens mais usadas` | Chart title |
-| `max_bars` | `8` | Number of languages shown before grouping the rest into "Outras" (Others) |
+| `lang` | `pt` | Language of the chart texts: `pt`, `en` or `es` |
+| `title` | title of the chosen `lang` | Chart title |
+| `max_bars` | `8` | Number of languages shown before grouping the rest into "Others" |
 | `include_private` | `true` | Include private repositories |
 | `include_forks` | `false` | Include forks |
 | `commit` | `true` | Commit the SVG automatically |
@@ -87,14 +88,15 @@ To generate the first chart without waiting for the schedule, go to **Actions â†
 
 ### Examples
 
-Public repositories only, with the SVG in a folder:
+Public repositories only, in English, with a custom title and the SVG in a folder:
 
 ```yaml
 - uses: jvsiqueira1/gh-stats@v1
   with:
     token: ${{ secrets.GH_TOKEN }}
     include_private: "false"
-    title: "Most used languages"
+    lang: "en"
+    title: "My top languages"
     output: "assets/languages.svg"
 ```
 
@@ -124,7 +126,6 @@ The **names** of private repositories never appear in the chart. Their bytes of 
 ### Limitations
 
 - Organization repositories are not counted, even if you are a member.
-- The chart's fixed labels (the subtitle and the "Outras" bar) are in Portuguese. The title can be changed with the `title` input.
 - On GitHub, scheduled workflows in public repositories are paused after 60 days without activity. If that happens, re-enable the workflow in the Actions tab.
 
 ## Running locally
@@ -142,7 +143,7 @@ Then run:
 node --env-file=.env src/index.mjs
 ```
 
-Options can also be passed as environment variables: `OUTPUT`, `TITLE`, `MAX_BARS`, `INCLUDE_PRIVATE` and `INCLUDE_FORKS`.
+Options can also be passed as environment variables: `OUTPUT`, `CHART_LANG`, `TITLE`, `MAX_BARS`, `INCLUDE_PRIVATE` and `INCLUDE_FORKS`.
 
 ## License
 

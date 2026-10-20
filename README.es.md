@@ -60,7 +60,7 @@ jobs:
       - uses: jvsiqueira1/gh-stats@v1
         with:
           token: ${{ secrets.GH_TOKEN }}
-          title: "Lenguajes más usados"
+          lang: "es"
 ```
 
 ### 4. Agrega el gráfico a tu README
@@ -78,8 +78,9 @@ Para generar el primer gráfico sin esperar a la programación, ve a **Actions �
 | `token` | — | **Obligatorio.** Token con acceso de lectura (Metadata) a tus repositorios |
 | `username` | dueño del repositorio | Usuario de GitHub cuyos repositorios se analizarán |
 | `output` | `languages.svg` | Ruta del SVG generado |
-| `title` | `Linguagens mais usadas` | Título del gráfico |
-| `max_bars` | `8` | Cantidad de lenguajes mostrados antes de agrupar el resto en "Outras" (Otros) |
+| `lang` | `pt` | Idioma de los textos del gráfico: `pt`, `en` o `es` |
+| `title` | título del `lang` elegido | Título del gráfico |
+| `max_bars` | `8` | Cantidad de lenguajes mostrados antes de agrupar el resto en "Otros" |
 | `include_private` | `true` | Incluir repositorios privados |
 | `include_forks` | `false` | Incluir forks |
 | `commit` | `true` | Hacer commit del SVG automáticamente |
@@ -87,14 +88,15 @@ Para generar el primer gráfico sin esperar a la programación, ve a **Actions �
 
 ### Ejemplos
 
-Solo repositorios públicos, con el SVG en una carpeta:
+Solo repositorios públicos, en español, con un título propio y el SVG en una carpeta:
 
 ```yaml
 - uses: jvsiqueira1/gh-stats@v1
   with:
     token: ${{ secrets.GH_TOKEN }}
     include_private: "false"
-    title: "Lenguajes más usados"
+    lang: "es"
+    title: "Mis lenguajes"
     output: "assets/languages.svg"
 ```
 
@@ -124,7 +126,6 @@ Los **nombres** de los repositorios privados no aparecen en el gráfico. Sus byt
 ### Limitaciones
 
 - Los repositorios de organizaciones no se cuentan, aunque seas miembro.
-- Los textos fijos del gráfico (el subtítulo y la barra "Outras") están en portugués. El título se puede cambiar con el input `title`.
 - En GitHub, los workflows programados de repositorios públicos se pausan tras 60 días sin actividad. Si eso ocurre, vuelve a activar el workflow en la pestaña Actions.
 
 ## Ejecutarla localmente
@@ -142,7 +143,7 @@ Y ejecuta:
 node --env-file=.env src/index.mjs
 ```
 
-Las opciones también se pueden pasar como variables de entorno: `OUTPUT`, `TITLE`, `MAX_BARS`, `INCLUDE_PRIVATE` e `INCLUDE_FORKS`.
+Las opciones también se pueden pasar como variables de entorno: `OUTPUT`, `CHART_LANG`, `TITLE`, `MAX_BARS`, `INCLUDE_PRIVATE` e `INCLUDE_FORKS`.
 
 ## Licencia
 

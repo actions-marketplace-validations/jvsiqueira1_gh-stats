@@ -16,11 +16,14 @@ inputs:
   output:
     description: "Caminho do SVG gerado"
     default: "languages.svg"
+  lang:
+    description: "Idioma dos textos do gráfico: pt, en ou es"
+    default: "pt"
   title:
-    description: "Título do gráfico"
-    default: "Linguagens mais usadas"
+    description: "Título do gráfico (padrão: o título do idioma escolhido)"
+    default: ""
   max_bars:
-    description: "Quantidade de linguagens antes de agrupar o resto em 'Outras'"
+    description: "Quantidade de linguagens antes de agrupar o resto"
     default: "8"
   include_private:
     description: "Incluir repositórios privados"
@@ -45,6 +48,7 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
         GH_USERNAME: ${{ inputs.username }}
         OUTPUT: ${{ inputs.output }}
+        CHART_LANG: ${{ inputs.lang }}
         TITLE: ${{ inputs.title }}
         MAX_BARS: ${{ inputs.max_bars }}
         INCLUDE_PRIVATE: ${{ inputs.include_private }}

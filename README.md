@@ -77,7 +77,8 @@ Para gerar o primeiro gráfico sem esperar o agendamento, vá em **Actions → A
 | `token` | — | **Obrigatório.** Token com acesso de leitura (Metadata) aos seus repositórios |
 | `username` | dono do repositório | Usuário do GitHub cujos repositórios serão analisados |
 | `output` | `languages.svg` | Caminho do SVG gerado |
-| `title` | `Linguagens mais usadas` | Título do gráfico |
+| `lang` | `pt` | Idioma dos textos do gráfico: `pt`, `en` ou `es` |
+| `title` | título do `lang` escolhido | Título do gráfico |
 | `max_bars` | `8` | Quantidade de linguagens exibidas antes de agrupar o resto em "Outras" |
 | `include_private` | `true` | Incluir repositórios privados |
 | `include_forks` | `false` | Incluir forks |
@@ -86,14 +87,15 @@ Para gerar o primeiro gráfico sem esperar o agendamento, vá em **Actions → A
 
 ### Exemplos
 
-Somente repositórios públicos, com título em inglês e o SVG numa pasta:
+Somente repositórios públicos, em inglês, com título próprio e o SVG numa pasta:
 
 ```yaml
 - uses: jvsiqueira1/gh-stats@v1
   with:
     token: ${{ secrets.GH_TOKEN }}
     include_private: "false"
-    title: "Most used languages"
+    lang: "en"
+    title: "My top languages"
     output: "assets/languages.svg"
 ```
 
@@ -140,7 +142,7 @@ E rode:
 node --env-file=.env src/index.mjs
 ```
 
-As opções também podem ser passadas por variável de ambiente: `OUTPUT`, `TITLE`, `MAX_BARS`, `INCLUDE_PRIVATE` e `INCLUDE_FORKS`.
+As opções também podem ser passadas por variável de ambiente: `OUTPUT`, `CHART_LANG`, `TITLE`, `MAX_BARS`, `INCLUDE_PRIVATE` e `INCLUDE_FORKS`.
 
 ## Licença
 
